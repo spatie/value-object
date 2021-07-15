@@ -182,19 +182,21 @@ Any caster can be passed custom arguments, the built-in `ArrayCaster` implementa
 class ArrayCaster implements Caster
 {
     public function __construct(
-        private string $type,
+        private array $types,
         private string $itemType,
     ) {
     }
 
     public function cast(mixed $value): array | ArrayAccess
     {
-        if ($this->type == 'array') {
-            return $this->castArray($value);
-        }
+        foreach ($this->types as $type) {
+            if ($type == 'array') {
+                return $this->castArray($value);
+            }
 
-        if (is_subclass_of($this->type, ArrayAccess::class)) {
-            return $this->castArrayAccess($value);
+            if (is_subclass_of($type, ArrayAccess::class)) {
+                return $this->castArrayAccess($type, $value);
+            }
         }
 
         throw new LogicException("Caster [ArrayCaster] may only be used to cast arrays or objects that implement ArrayAccess.");
@@ -205,9 +207,9 @@ class ArrayCaster implements Caster
         return array_map([$this, 'makeItem'], $value);
     }
 
-    private function castArrayAccess(array $value): ArrayAccess
+    private function castArrayAccess(string $type, array $value): ArrayAccess
     {
-        $arrayAccess = new $this->type();
+        $arrayAccess = new $type();
 
         foreach ($this->castArray($value) as $item) {
             $arrayAccess[] = $item;
@@ -245,7 +247,7 @@ Note that you don't need to use named arguments to pass input as generic caster 
     public array $collectionWithoutNamedArguments;
 ```
 
-Also note that the first argument passed to the caster constructor is always the type of the value being casted.
+Also note that the first argument passed to the caster constructor is always the array with type(s) of the value being casted.
 All other arguments will be the ones passed as extra arguments in the `CastWith` attribute.
 
 ## Validation

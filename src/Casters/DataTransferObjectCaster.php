@@ -8,16 +8,18 @@ use Spatie\DataTransferObject\DataTransferObject;
 class DataTransferObjectCaster implements Caster
 {
     public function __construct(
-        private string $className
+        private array $classNames
     ) {
     }
 
     public function cast(mixed $value): DataTransferObject
     {
-        if ($value instanceof $this->className) {
-            return $value;
+        foreach ($this->classNames as $className) {
+            if ($value instanceof $className) {
+                return $value;
+            }
         }
 
-        return new $this->className(...$value);
+        return new $this->classNames[0](...$value);
     }
 }
